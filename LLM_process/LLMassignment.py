@@ -33,8 +33,9 @@ class ArticleAssignerExtreme:
 
 要求：
 - 可以归属到一个或多个章节。
-- 如果归属多个章节，列出所有相关章节编号（最多不超过3个）。
+- 如果归属多个章节，列出所有相关章节编号。
 - 严格按照格式输出，不要添加任何解释或注释。
+
 
 章节列表：
 {chapter_list}
@@ -43,9 +44,9 @@ class ArticleAssignerExtreme:
 {paragraph_list}
 
 请按照如下格式输出归属关系：
-段落1: 章节编号1, 章节编号3
-段落2: 章节编号2
-段落3: 章节编号1, 章节编号2
+[{{段落1: 1, 3}},
+{{段落2: 2}},
+{{段落3: 1, 2}}...]
 ...
 
 开始归类：
@@ -66,25 +67,32 @@ class ArticleAssignerExtreme:
             paragraph_list='\n'.join(paragraphs)
         ).to_string()
 
+    
     def _parse_response(self, response_text):
         """
-        解析模型输出
+        解析模型输出（适配 ['[{段落1: 1},', '{段落2: 2}]'] 这种格式）
         """
         mapping = {}
-        lines = response_text.strip().splitlines()
-        pattern = r"段落\s*(\d+)\s*:\s*(.+)"
 
-        for line in lines:
-            match = re.match(pattern, line.strip())
+        # 先把列表里的唯一元素取出来
+        if isinstance(response_text, list):
+            response_text = response_text[0]
+
+        # 去掉两边的中括号和空格
+        response_text = response_text.strip()[1:-1]
+
+        # 按逗号分开每一小段
+        items = response_text.split(',')
+        
+        pattern = r"段落\s*(\d+)\s*:\s*(\d+)"
+
+        for item in items:
+            item = item.strip().strip('{}')  # 去掉每项里的花括号
+            match = re.match(pattern, item)
             if match:
                 para_idx = int(match.group(1)) - 1
-                chapter_idxs = [
-                    int(idx.strip()) - 1
-                    for idx in match.group(2).split(',')
-                    if idx.strip().isdigit()
-                ]
-                if chapter_idxs:
-                    mapping[para_idx] = chapter_idxs
+                chapter_idx = int(match.group(2)) - 1
+                mapping[para_idx] = [chapter_idx]  # 注意：用列表包起来
         return mapping
 
     def assign(self, base_articles, reference_articles):
@@ -103,11 +111,12 @@ class ArticleAssignerExtreme:
             reference_batch = reference_articles[batch_start:batch_end]
 
             prompt = self._build_prompt(base_articles, reference_batch, batch_start)
+            print('prompt:', prompt)
 
             # invoke 时，传入的是 {"text": prompt}
             response = self.llm_model.invoke({"text": prompt})
             print(f"--- 第 {batch_idx} 批次的 LLM 原始输出 ---") # 添加这行
-            print(response)                                  # 添加这行
+            print('response:', response)                                  # 添加这行
             print("--- LLM 输出结束 ---")                      # 添加这行
             if not response:
                 print(f"警告：第 {batch_idx} 批次的 LLM 输出为空") # 可选：添加警告
@@ -123,8 +132,10 @@ class ArticleAssignerExtreme:
                 if 0 <= ref_global_idx < len(reference_articles):
                     ref_item = {
                         'id': reference_articles[ref_global_idx]['id'],
-                        'summary': reference_articles[ref_global_idx]['summary']
+                        #'summary': reference_articles[ref_global_idx]['summary'],
+                        #'length': reference_articles[ref_global_idx]['length']
                     }
+                    # ref_item = reference_articles[ref_global_idx]['id']
                     for chapter_idx in chapter_idxs:
                         if 0 <= chapter_idx < len(base_articles):
                             base_articles[chapter_idx]['references'].append(ref_item)

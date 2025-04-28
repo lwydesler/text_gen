@@ -42,8 +42,15 @@ class DocumentPrase:
             self.extract_paragraph(child, result, title_list)
 
 
+    """
+    增加选择，如果只有title，也就是只有提纲该怎么处理文件
+    """
+    def extract_title(self):
+        return 
 
- 
+
+
+
 class SummaryGenerator:
     def __init__(self, model_name="qwen-plus"):
         """初始化摘要生成器

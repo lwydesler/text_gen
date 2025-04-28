@@ -15,28 +15,79 @@ class InputPostProcessor(ABC):
         """
         pass
 
+# class TextCleaner(InputPostProcessor):
+#     """文本清理处理器"""
+    
+#     # def process(self, input_data):
+#     #     """清理文本数据
+        
+#     #     Args:
+#     #         input_data (str): 输入的文本数据
+            
+#     #     Returns:
+#     #         str: 清理后的文本
+#     #     """
+#     #     if not isinstance(input_data, str):
+#     #         raise ValueError("输入数据必须是字符串类型")
+            
+#     #     # 去除多余空白字符
+#     #     text = " ".join(input_data.split())
+        
+#     #     # 去除特殊字符
+#     #     text = text.strip()
+        
+#     #     return text
+    
+#     def process_(self, item):
+
+#         if not item:
+#             return
+#         current_title = item.get("title", "")
+#         paragraph = item.get("paragraphs", [])
+#         children = item.get("children", [])
+
+#         if current_title:
+#             current_title=current_title.strip()
+
+#         if paragraph:
+#             result = ''.join(item.replace('\n', '') for item in paragraph)
+#             paragraph = [result]
+
+
+#         for child in children:
+#             self.process_(child)
+
 class TextCleaner(InputPostProcessor):
     """文本清理处理器"""
     
-    def process(self, input_data):
-        """清理文本数据
+    def process(self, item):
+        # 如果 item 为 None 或者是空字典，直接返回
+        if not item:
+            return
         
-        Args:
-            input_data (str): 输入的文本数据
-            
-        Returns:
-            str: 清理后的文本
-        """
-        if not isinstance(input_data, str):
-            raise ValueError("输入数据必须是字符串类型")
-            
-        # 去除多余空白字符
-        text = " ".join(input_data.split())
-        
-        # 去除特殊字符
-        text = text.strip()
-        
-        return text
+        # 获取 item 中的字段
+        current_title = item.get("title", "")
+        paragraph = item.get("paragraphs", [])
+        children = item.get("children", [])
+
+        # 处理标题，去除两边的空格
+        if current_title:
+            current_title = current_title.strip()
+            item["title"] = current_title  # 更新 item 中的 title
+
+        # 处理段落，去除换行符和空格
+        if paragraph:
+            # 遍历每个段落元素，去除其中的换行符
+            result = ''.join(item.replace('\n', '') for item in paragraph)
+            paragraph = [result]
+            item["paragraphs"] = paragraph  # 更新 item 中的 paragraphs
+
+        # 递归处理子项
+        for child in children:
+            self.process_(child)  # 递归调用处理子项
+
+        # 返回修改后的 item（如果需要的话）
+        return item
         
 class StructureNormalizer(InputPostProcessor):
     """结构数据标准化处理器"""
@@ -123,6 +174,65 @@ class FieldExtractor:
         :param new_fields: List[str]，新的字段名
         """
         self.fields_to_keep = new_fields
+
+
+
+class ReferenceEnricher:
+    def __init__(self, reference_list):
+        """
+        初始化，保存所有可用的 reference 信息。
+        
+        参数：
+        - reference_list: 包含文献信息的列表。
+        """
+        self.reference_list = reference_list
+
+    def enrich(self, data):
+        """
+        根据 data 中 references 的 id，填充 reference 的详细信息。
+
+        参数：
+        - data: 要处理的数据列表。
+
+        返回：
+        - 填充后的数据列表（修改原列表）。
+        """
+        for item in data:
+            references = item.get('references', [])
+            if not references:
+                print("Warning: references is empty.")
+                references.append(self.reference_list['overall_summary'])
+            else:
+                for ref in references:
+                    ref_id = ref.get('id')
+                    if ref_id is not None and 0 <= ref_id < len(self.reference_list):
+                        ref.update(self.reference_list[ref_id])
+                    else:
+                        print(f"Warning: id {ref_id} is out of range.")
+
+
+            # for ref in item.get('references', []):
+            #     ref_id = ref.get('id')
+            #     if ref_id is not None and 0 <= ref_id < len(self.reference_list):
+            #         ref.update(self.reference_list['section_summaries'][ref_id])
+            #     else:
+            #         # 可选：如果 id 不合法，记录一下，方便排查
+            #         print(f"Warning: id {ref_id} is out of range.")
+        return data
+
+    # def enrich_copy(self, data):
+    #     """
+    #     生成一个副本，不修改原始 data，返回填充后的新副本。
+
+    #     参数：
+    #     - data: 要处理的数据列表。
+
+    #     返回：
+    #     - 填充后的数据新副本。
+    #     """
+    #     import copy
+    #     data_copy = copy.deepcopy(data)
+    #     return self.enrich(data_copy)
 
 
 if __name__ == '__main__':
