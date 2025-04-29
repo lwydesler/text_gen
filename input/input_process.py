@@ -1,4 +1,4 @@
-import PyPDF2  # 用于读取PDF文件
+# import PyPDF2  # 用于读取PDF文件
 import docx    # 用于读取Word文档
 import os      # 用于文件路径操作
 import re      # 用于正则表达式

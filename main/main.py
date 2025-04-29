@@ -1,7 +1,7 @@
-from ..input.input_process import ReadFile
-from ..utils.input_helper import StructureNormalizer, TextCleaner, FieldExtractor, ReferenceEnricher
-from ..LLM_process.LLMparse import DocumentPrase, SummaryGenerator
-from ..LLM_process.LLMassignment import ArticleAssignerExtreme
+from input.input_process import ReadFile
+from utils.input_helper import StructureNormalizer, TextCleaner, FieldExtractor, ReferenceEnricher
+from LLM_process.LLMparse import DocumentPrase, SummaryGenerator
+from LLM_process.LLMassignment import ArticleAssignerExtreme
 
 def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
 
@@ -33,11 +33,17 @@ def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
     base_articles = base_file_extractor(base_phrase)
     reference_articles = reference_file_extractor(summary_output['section_summaries'])
 
-    assigner = ArticleAssignerExtreme(model_name=model_name, batch_size=50)
+    assigner = ArticleAssignerExtreme(model_name=model_name, batch_size=batch_size)
     new_articles = assigner.assign(base_articles, reference_articles)
 
     new_file_productor = ReferenceEnricher(summary_output)
     new_file_production = new_file_productor(new_articles)
 
+    return new_file_production
 
+if __name__ == '__main__':
+    base_path = '/home/baishi/PycharmProjects/text_gen/test/base.docx'
+    reference_path = '/home/baishi/PycharmProjects/text_gen/test/reference.docx'
+    result = main(base_path, reference_path, model_name="qwen-plus", batch_size=50)
+    print(result)
 
