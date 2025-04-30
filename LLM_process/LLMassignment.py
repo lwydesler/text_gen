@@ -44,9 +44,17 @@ class ArticleAssignerExtreme:
 {paragraph_list}
 
 请按照如下格式输出归属关系：
-[{{段落1: 1, 3}},
-{{段落2: 2}},
-{{段落3: 1, 2}}...]
+[{{int类型，章节编号：[int类型，段落编号, int类型，段落编号...]}},
+{{int类型，章节编号：[int类型，段落编号, int类型，段落编号...]}},
+{{int类型，章节编号：[int类型，段落编号, int类型，段落编号...]}}...
+]
+
+
+例如：
+[{{1: [1, 3]}},
+{{2: [2]}},
+{{3: [1, 7]}}...]
+注意：输出的内容章节是指章节列表中的章节，段落指段落摘要列表中的段落
 ...
 
 开始归类：
@@ -70,7 +78,7 @@ class ArticleAssignerExtreme:
     
     def _parse_response(self, response_text):
         """
-        解析模型输出（适配 ['[{段落1: 1},', '{段落2: 2}]'] 这种格式）
+        解析模型输出（适配 ['[{章节1: [段落1, 段落3]},', '{章节2: 段落2}]'] 这种格式）
         """
         mapping = {}
 
@@ -80,15 +88,31 @@ class ArticleAssignerExtreme:
 
         # 去掉两边的中括号和空格
         response_text = response_text.strip()[1:-1]
+        print('response_text:', response_text)
 
         # 按逗号分开每一小段
-        items = response_text.split(',')
+        items = response_text.split('\n')
+        print('items:', items)
+
         
-        pattern = r"段落\s*(\d+)\s*:\s*(\d+)"
+        #pattern = r"段落\s*(\d+)\s*:\s*(\d+)"
+        pattern_pre = r'\{(.*)\}'
+        pattern = r"(\d+)\s*:\s*((?:\d+\s*,\s*)*\d+)"
 
         for item in items:
-            item = item.strip().strip('{}')  # 去掉每项里的花括号
-            match = re.match(pattern, item)
+            print('pre_item:', item)
+            #item = item.strip().strip('{}')  # 去掉每项里的花括号
+            match_pre = re.search(pattern_pre, item)
+            print('match_pre:', match_pre)
+            if match_pre:
+                match_pre = match_pre.group(1)
+            else:
+                match_pre = ''
+            print('match_pre:', match_pre)
+
+            match = re.match(pattern, match_pre)
+            print('match:', match)
+
             if match:
                 para_idx = int(match.group(1)) - 1
                 chapter_idx = int(match.group(2)) - 1
@@ -111,7 +135,7 @@ class ArticleAssignerExtreme:
             reference_batch = reference_articles[batch_start:batch_end]
 
             prompt = self._build_prompt(base_articles, reference_batch, batch_start)
-            print('prompt:', prompt)
+            # print('prompt:', prompt)
 
             # invoke 时，传入的是 {"text": prompt}
             response = self.llm_model.invoke({"text": prompt})
@@ -127,6 +151,7 @@ class ArticleAssignerExtreme:
                 continue  # 防止空输出
 
             mapping = self._parse_response(model_output)
+            print('mapping:', mapping)
 
             for ref_global_idx, chapter_idxs in mapping.items():
                 if 0 <= ref_global_idx < len(reference_articles):
