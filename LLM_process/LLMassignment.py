@@ -97,7 +97,8 @@ class ArticleAssignerExtreme:
         
         #pattern = r"段落\s*(\d+)\s*:\s*(\d+)"
         pattern_pre = r'\{(.*)\}'
-        pattern = r"(\d+)\s*:\s*((?:\d+\s*,\s*)*\d+)"
+        #pattern = r"(\d+)\s*:\s*((?:\d+\s*,\s*)*\d+)"
+        pattern = r'(\d+):\s*\[\s*([\d，, ]+)\s*\]'
 
         for item in items:
             print('pre_item:', item)
@@ -114,9 +115,15 @@ class ArticleAssignerExtreme:
             print('match:', match)
 
             if match:
-                para_idx = int(match.group(1)) - 1
-                chapter_idx = int(match.group(2)) - 1
-                mapping[para_idx] = [chapter_idx]  # 注意：用列表包起来
+                key = int(match.group(1))-1
+                # value_list = re.findall(r'\d+', match.group(2))  # 提取所有数字
+                value_list = [int(x)-1 for x in re.findall(r'\d+', match.group(2))]
+
+                # para_idx = int(match.group(1)) - 1
+                # chapter_idx = int(match.group(2)) - 1
+                # mapping[para_idx] = [chapter_idx]  # 注意：用列表包起来
+                mapping[key] = value_list 
+            print('mapping:', mapping)
         return mapping
 
     def assign(self, base_articles, reference_articles):
@@ -154,6 +161,7 @@ class ArticleAssignerExtreme:
             print('mapping:', mapping)
 
             for ref_global_idx, chapter_idxs in mapping.items():
+                print('ref_global_idx, chapter_idxs:', ref_global_idx, chapter_idxs)
                 if 0 <= ref_global_idx < len(reference_articles):
                     ref_item = {
                         'id': reference_articles[ref_global_idx]['id'],
@@ -162,8 +170,8 @@ class ArticleAssignerExtreme:
                     }
                     # ref_item = reference_articles[ref_global_idx]['id']
                     for chapter_idx in chapter_idxs:
-                        if 0 <= chapter_idx < len(base_articles):
-                            base_articles[chapter_idx]['references'].append(ref_item)
+                        if 0 <= int(chapter_idx) < len(base_articles):
+                            base_articles[int(chapter_idx)]['references'].append(ref_item)
 
         return base_articles
 if __name__ == '__main__':
