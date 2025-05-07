@@ -159,19 +159,24 @@ class ArticleAssignerExtreme:
 
             mapping = self._parse_response(model_output)
             print('mapping:', mapping)
+            print('base_articles', base_articles)
+            print('reference_articles', reference_articles)
 
             for ref_global_idx, chapter_idxs in mapping.items():
                 print('ref_global_idx, chapter_idxs:', ref_global_idx, chapter_idxs)
-                if 0 <= ref_global_idx < len(reference_articles):
-                    ref_item = {
-                        'id': reference_articles[ref_global_idx]['id'],
-                        #'summary': reference_articles[ref_global_idx]['summary'],
-                        #'length': reference_articles[ref_global_idx]['length']
-                    }
-                    # ref_item = reference_articles[ref_global_idx]['id']
-                    for chapter_idx in chapter_idxs:
-                        if 0 <= int(chapter_idx) < len(base_articles):
-                            base_articles[int(chapter_idx)]['references'].append(ref_item)
+                base_articles[int(ref_global_idx)]['references'] = base_articles[int(ref_global_idx)]['references']+chapter_idxs
+
+                # if 0 <= ref_global_idx < len(reference_articles):
+                #     ref_item = {
+                #         'id': reference_articles[ref_global_idx]['id'],
+                #         #'summary': reference_articles[ref_global_idx]['summary'],
+                #         #'length': reference_articles[ref_global_idx]['length']
+                #     }
+                #     # ref_item = reference_articles[ref_global_idx]['id']
+                #     for chapter_idx in chapter_idxs:
+
+                #         if 0 <= int(chapter_idx) < len(reference_articles):
+                #             base_articles[int(chapter_idx)]['references'].append(ref_item)
 
         return base_articles
 if __name__ == '__main__':

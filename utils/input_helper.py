@@ -250,13 +250,64 @@ class FieldExtractor:
 
 
 
+# class ReferenceEnricher:
+#     def __init__(self, reference_list):
+#         """
+#         初始化，保存所有可用的 reference 信息。
+        
+#         参数：
+#         - reference_list: 包含文献信息的列表。
+#         """
+#         self.reference_list = reference_list
+
+#     def enrich(self, data):
+#         """
+#         根据 data 中 references 的 id，填充 reference 的详细信息。
+
+#         参数：
+#         - data: 要处理的数据列表。
+
+#         返回：
+#         - 填充后的数据列表（修改原列表）。
+#         """
+#         print('data', data)
+#         for item in data:
+#             references = item.get('references', [])
+#             if not references:
+#                 print("Warning: references is empty.")
+#                 references.append(self.reference_list['overall_summary'])
+#             else:
+#                 print('length_self.reference_list',len(self.reference_list['section_summaries']))
+#                 for ref in references:
+#                     # ref_id = ref.get('id')
+#                     ref_id = ref
+#                     print("ref_id:", ref_id)
+
+#                     if ref_id is not None and 0 <= ref_id < len(self.reference_list['section_summaries']):
+#                         print("ref_id:", ref_id)
+#                         # print('self.reference_list[section_summaries]', self.reference_list['section_summaries'])
+#                         # print("reference_list keys:", self.reference_list.keys())
+#                         references[ref_id] = self.reference_list['section_summaries'][ref_id]
+#                         # ref.update(self.reference_list['section_summaries'][ref_id])
+#                     else:
+#                         print(f"Warning: id {ref_id} is out of range.")
+
+
+#             # for ref in item.get('references', []):
+#             #     ref_id = ref.get('id')
+#             #     if ref_id is not None and 0 <= ref_id < len(self.reference_list):
+#             #         ref.update(self.reference_list['section_summaries'][ref_id])
+#             #     else:
+#             #         # 可选：如果 id 不合法，记录一下，方便排查
+#             #         print(f"Warning: id {ref_id} is out of range.")
+#         return data
 class ReferenceEnricher:
     def __init__(self, reference_list):
         """
         初始化，保存所有可用的 reference 信息。
         
         参数：
-        - reference_list: 包含文献信息的列表。
+        - reference_list: 包含文献信息的字典，必须包含 'section_summaries' 和 'overall_summary'。
         """
         self.reference_list = reference_list
 
@@ -271,26 +322,20 @@ class ReferenceEnricher:
         - 填充后的数据列表（修改原列表）。
         """
         for item in data:
-            references = item.get('references', [])
-            if not references:
+            original_refs = item.get('references', [])
+
+            if not original_refs:
                 print("Warning: references is empty.")
-                references.append(self.reference_list['overall_summary'])
+                item['references'] = [self.reference_list['overall_summary']]
             else:
-                for ref in references:
-                    ref_id = ref.get('id')
-                    if ref_id is not None and 0 <= ref_id < len(self.reference_list):
-                        ref.update(self.reference_list[ref_id])
+                enriched_refs = []
+                for ref_id in original_refs:
+                    if isinstance(ref_id, int) and 0 <= ref_id < len(self.reference_list['section_summaries']):
+                        enriched_refs.append(self.reference_list['section_summaries'][ref_id])
                     else:
-                        print(f"Warning: id {ref_id} is out of range.")
+                        print(f"Warning: id {ref_id} is out of range or invalid.")
+                item['references'] = enriched_refs
 
-
-            # for ref in item.get('references', []):
-            #     ref_id = ref.get('id')
-            #     if ref_id is not None and 0 <= ref_id < len(self.reference_list):
-            #         ref.update(self.reference_list['section_summaries'][ref_id])
-            #     else:
-            #         # 可选：如果 id 不合法，记录一下，方便排查
-            #         print(f"Warning: id {ref_id} is out of range.")
         return data
 
     # def enrich_copy(self, data):
