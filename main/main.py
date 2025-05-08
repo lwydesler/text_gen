@@ -2,6 +2,7 @@ from input.input_process import ReadFile
 from utils.input_helper import StructureNormalizer, TextCleaner, FieldExtractor, ReferenceEnricher
 from LLM_process.LLMparse import DocumentPrase, SummaryGenerator
 from LLM_process.LLMassignment import ArticleAssignerExtreme
+from LLM_process.LLMgenerator import ParagraphGenerator
 
 def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
 
@@ -56,6 +57,9 @@ def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
     new_file_productor = ReferenceEnricher(summary_output)
     new_file_production = new_file_productor.enrich(new_articles)
 
+    print('-'*20+'ParagraphGenerator:ParagraphGenerator'+'-'*20)
+    # generator = ParagraphGenerator(model_name=model_name)
+    # generated_results = generator.generate_all_chapters(new_file_production)
     return new_file_production
 
 if __name__ == '__main__':
