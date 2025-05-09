@@ -5,12 +5,12 @@ from langchain.chains import LLMChain
 from langchain_community.llms import Tongyi# 记得根据实际导入Tongyi
 
 class ArticleAssignerExtreme:
-    def __init__(self, model_name, batch_size=50):
+    def __init__(self, model_name,current_api_key, batch_size=50):
         """
         :param model_name: 通义千问模型名称
         :param batch_size: 每批处理的段落数
         """
-        current_api_key = 'sk-ff2f7a46bc0f412c9ae4915a2829465c'  # 你的DashScope API Key
+        current_api_key =  current_api_key # 你的DashScope API Key
         if not current_api_key:
             raise ValueError("请设置 API Key")
 
@@ -182,7 +182,8 @@ class ArticleAssignerExtreme:
 if __name__ == '__main__':
 
     # 初始化分配器
-    assigner = ArticleAssignerExtreme(model_name="qwen-plus", batch_size=50)
+    apiley = ''
+    assigner = ArticleAssignerExtreme(model_name="qwen-plus",current_api_key=apiley, batch_size=50)
 
     base_articles = [
         {'title': ['引言', '研究背景'], 'length': 58},

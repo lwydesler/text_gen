@@ -326,7 +326,7 @@ class ReferenceEnricher:
 
             if not original_refs:
                 print("Warning: references is empty.")
-                item['references'] = [self.reference_list['overall_summary']]
+                item['references'] = [{'title': ['摘要'],'paragraph':self.reference_list['overall_summary'], 'length': len(self.reference_list['overall_summary'])}]
             else:
                 enriched_refs = []
                 for ref_id in original_refs:

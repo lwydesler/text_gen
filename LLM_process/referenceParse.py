@@ -288,7 +288,7 @@ from typing import List, Dict, Any, Optional # Added type hints
 #             return None
 
 class SummaryGenerator:
-    def __init__(self, model_name="qwen-plus"):
+    def __init__(self, model_name="qwen-plus", api_key=''):
         """初始化摘要生成器
 
         Args:
@@ -300,7 +300,7 @@ class SummaryGenerator:
         # 从环境变量获取 API Key (Recommended)
         # api_key = os.getenv("DASHSCOPE_API_KEY")
         # Using the provided key for this example
-        current_api_key = 'sk-ff2f7a46bc0f412c9ae4915a2829465c'  # Use the key defined above
+        current_api_key = api_key  # Use the key defined above
         if not current_api_key:
             raise ValueError("请设置 DASHSCOPE_API_KEY 环境变量或在代码中提供 API Key")
 
@@ -482,7 +482,8 @@ if __name__ == "__main__":
 
     # 创建生成器实例 (可以选择不同模型)
     # generator = SummaryGenerator(model_name="qwen-turbo")
-    generator = SummaryGenerator(model_name="qwen-plus")
+    apikey = ''
+    generator = SummaryGenerator(model_name="qwen-plus", api_key=apikey)
 
     # 生成摘要
     summary_output = generator.generate_document_summary(document_data)

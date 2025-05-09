@@ -4,7 +4,7 @@ from LLM_process.LLMparse import DocumentPrase, SummaryGenerator
 from LLM_process.LLMassignment import ArticleAssignerExtreme
 from LLM_process.LLMgenerator import ParagraphGenerator
 
-def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
+def main(base_path, reference_path, apikey, model_name="qwen-plus", batch_size=50):
 
     reader_base = ReadFile(base_path)
     print('-'*20+'reader_base:base_content'+'-'*20)
@@ -29,7 +29,7 @@ def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
     reference_content = text_process.process(reference_content)
 
     doc_process = DocumentPrase()
-    summary_process = SummaryGenerator(model_name=model_name)
+    summary_process = SummaryGenerator(model_name=model_name, api_key=apikey)
 
     print('-'*20+'doc_process:base_phrase'+'-'*20)
     base_phrase = doc_process.extract_paragraphs(base_content)
@@ -50,7 +50,7 @@ def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
     reference_articles = reference_file_extractor.extract(summary_output['section_summaries'])
 
     print('-'*20+'assigner:new_articles'+'-'*20)
-    assigner = ArticleAssignerExtreme(model_name=model_name, batch_size=batch_size)
+    assigner = ArticleAssignerExtreme(model_name=model_name, batch_size=batch_size, current_api_key=apikey)
     new_articles = assigner.assign(base_articles, reference_articles)
 
     print('-'*20+'new_file_productor:new_file_production'+'-'*20)
@@ -65,6 +65,7 @@ def main(base_path, reference_path, model_name="qwen-plus", batch_size=50):
 if __name__ == '__main__':
     base_path = '/home/baishi/PycharmProjects/text_gen/test/base.docx'
     reference_path = '/home/baishi/PycharmProjects/text_gen/test/reference.docx'
-    result = main(base_path, reference_path, model_name="qwen-plus", batch_size=50)
+    api_key = ''
+    result = main(base_path, reference_path, apikey=api_key, model_name="qwen-plus", batch_size=50)
     print(result)
 
